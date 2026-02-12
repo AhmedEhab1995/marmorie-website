@@ -69,7 +69,7 @@ export function Categories() {
 
       {/* Additional category tags */}
       <div className="mt-8 flex flex-wrap justify-center gap-3">
-        {["valentines", "engraving", "labDiamonds", "gifts", "sale"].map((key) => (
+        {["valentines", "engraving", "labDiamonds", "gifts", "sale", "bridal", "marmorieBox"].map((key) => (
           <Link
             key={key}
             href={`/products?category=${key}`}

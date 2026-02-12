@@ -9,12 +9,23 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { PromoCodeInput } from "@/components/promo-code-input"
 import { useI18n } from "@/lib/i18n"
 import { useCart } from "@/lib/cart"
 
 export default function CheckoutPage() {
   const { t, locale } = useI18n()
-  const { items, updateQuantity, removeItem, total } = useCart()
+  const {
+    items,
+    updateQuantity,
+    removeItem,
+    subtotal,
+    discount,
+    total,
+    promoCode,
+    applyPromoCode,
+    removePromoCode,
+  } = useCart()
 
   return (
     <div className="min-h-screen">
@@ -165,10 +176,35 @@ export default function CheckoutPage() {
                   ))}
                 </div>
                 <Separator className="my-4" />
+                
+                {/* Promo Code Input */}
+                <div className="mb-4">
+                  <Label className="mb-2 block text-sm text-foreground">{t("promo.title")}</Label>
+                  <PromoCodeInput
+                    onApply={applyPromoCode}
+                    onRemove={removePromoCode}
+                    appliedCode={promoCode}
+                  />
+                </div>
+
+                <Separator className="my-4" />
+
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">{t("checkout.subtotal")}</span>
-                  <span className="text-foreground">${total.toLocaleString()}</span>
+                  <span className="text-foreground">${subtotal.toLocaleString()}</span>
                 </div>
+                
+                {discount > 0 && (
+                  <div className="mt-2 flex items-center justify-between text-sm">
+                    <span className="text-green-600 dark:text-green-400">
+                      {t("checkout.discount")} ({promoCode?.discount}%)
+                    </span>
+                    <span className="text-green-600 dark:text-green-400">
+                      -${discount.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+                
                 <div className="mt-2 flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">{t("checkout.shipping")}</span>
                   <span className="text-foreground">{t("checkout.free")}</span>

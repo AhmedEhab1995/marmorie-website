@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react"
+import { calculateDiscount, type PromoCode } from "@/lib/promo-codes"
 
 export type CartItem = {
   id: string
@@ -16,15 +17,21 @@ type CartContextType = {
   addItem: (item: Omit<CartItem, "quantity">) => void
   removeItem: (id: string) => void
   updateQuantity: (id: string, quantity: number) => void
+  subtotal: number
+  discount: number
   total: number
   itemCount: number
   clearCart: () => void
+  promoCode: PromoCode | null
+  applyPromoCode: (code: PromoCode) => void
+  removePromoCode: () => void
 }
 
 const CartContext = createContext<CartContextType | null>(null)
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
+  const [promoCode, setPromoCode] = useState<PromoCode | null>(null)
 
   const addItem = useCallback((item: Omit<CartItem, "quantity">) => {
     setItems((prev) => {
@@ -52,14 +59,40 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const clearCart = useCallback(() => setItems([]), [])
+  const clearCart = useCallback(() => {
+    setItems([])
+    setPromoCode(null)
+  }, [])
 
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const applyPromoCode = useCallback((code: PromoCode) => {
+    setPromoCode(code)
+  }, [])
+
+  const removePromoCode = useCallback(() => {
+    setPromoCode(null)
+  }, [])
+
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const discount = promoCode ? calculateDiscount(subtotal, promoCode.discount) : 0
+  const total = subtotal - discount
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, updateQuantity, total, itemCount, clearCart }}
+      value={{
+        items,
+        addItem,
+        removeItem,
+        updateQuantity,
+        subtotal,
+        discount,
+        total,
+        itemCount,
+        clearCart,
+        promoCode,
+        applyPromoCode,
+        removePromoCode,
+      }}
     >
       {children}
     </CartContext.Provider>

@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react"
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react"
 
 export type Locale = "en" | "ar"
 
@@ -38,6 +38,8 @@ export const translations: Translations = {
   "cat.valentines": { en: "Valentine's Day", ar: "عيد الحب" },
   "cat.engraving": { en: "Engraving", ar: "نقش" },
   "cat.labDiamonds": { en: "Lab-grown Diamonds", ar: "ألماس مُصنّع" },
+  "cat.marmorieBox": { en: "Marmorie's Box", ar: "علبة مارموري" },
+  "cat.bridal": { en: "Bridal Collection", ar: "مجموعة العرائس" },
   "cat.gifts": { en: "Gifts", ar: "هدايا" },
   "cat.sale": { en: "Sale", ar: "تخفيضات" },
 
@@ -85,6 +87,7 @@ export const translations: Translations = {
   "checkout.summary": { en: "Order Summary", ar: "ملخص الطلب" },
   "checkout.subtotal": { en: "Subtotal", ar: "المجموع الفرعي" },
   "checkout.shipping": { en: "Shipping", ar: "الشحن" },
+  "checkout.discount": { en: "Discount", ar: "الخصم" },
   "checkout.total": { en: "Total", ar: "الإجمالي" },
   "checkout.free": { en: "Free", ar: "مجاني" },
   "checkout.address": { en: "Delivery Address", ar: "عنوان التوصيل" },
@@ -95,6 +98,14 @@ export const translations: Translations = {
   "checkout.quantity": { en: "Qty", ar: "الكمية" },
   "checkout.emptyCart": { en: "Your cart is empty", ar: "سلتك فارغة" },
   "checkout.engraving": { en: "Engraving", ar: "نقش" },
+
+  // Promo Code
+  "promo.title": { en: "Promo Code", ar: "كود الخصم" },
+  "promo.placeholder": { en: "Enter promo code", ar: "أدخلي كود الخصم" },
+  "promo.apply": { en: "Apply", ar: "تطبيق" },
+  "promo.invalid": { en: "Invalid promo code", ar: "كود خصم غير صالح" },
+  "promo.applied": { en: "Promo code applied!", ar: "تم تطبيق كود الخصم!" },
+  "promo.removed": { en: "Promo code removed", ar: "تم إزالة كود الخصم" },
 
   // Footer
   "footer.newsletter": { en: "Join our newsletter", ar: "اشتركي في نشرتنا" },
@@ -194,13 +205,28 @@ type I18nContextType = {
 
 const I18nContext = createContext<I18nContextType | null>(null)
 
+const LOCALE_STORAGE_KEY = "marmorie-locale"
+
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>("en")
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  // Load locale from localStorage on mount
+  useEffect(() => {
+    const storedLocale = localStorage.getItem(LOCALE_STORAGE_KEY) as Locale | null
+    if (storedLocale && (storedLocale === "en" || storedLocale === "ar")) {
+      setLocaleState(storedLocale)
+      document.documentElement.lang = storedLocale
+      document.documentElement.dir = storedLocale === "ar" ? "rtl" : "ltr"
+    }
+    setIsHydrated(true)
+  }, [])
 
   const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale)
     document.documentElement.lang = newLocale
     document.documentElement.dir = newLocale === "ar" ? "rtl" : "ltr"
+    localStorage.setItem(LOCALE_STORAGE_KEY, newLocale)
   }, [])
 
   const t = useCallback(
@@ -211,6 +237,11 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   )
 
   const dir = locale === "ar" ? "rtl" : "ltr"
+
+  // Prevent flash of wrong direction on initial load
+  if (!isHydrated) {
+    return null
+  }
 
   return (
     <I18nContext.Provider value={{ locale, setLocale, t, dir }}>
