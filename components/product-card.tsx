@@ -13,11 +13,19 @@ import { useState } from "react"
 export function ProductCard({ product }: { product: Product }) {
   const { t, locale } = useI18n()
   const { addItem } = useCart()
-  const { toggle, isWishlisted } = useWishlist()
+  const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist()
   const [imageError, setImageError] = useState(false)
 
-  const wishlisted = isWishlisted(product.id)
+  const wishlisted = isInWishlist(product.id)
   const displayPrice = product.isSale && product.salePrice ? product.salePrice : product.price
+
+  const handleWishlistToggle = async () => {
+  if (wishlisted) {
+    await removeFromWishlist(product.id)
+  } else {
+    await addToWishlist(product.id)
+  }
+}
 
   // Better fallback handling
   const imageSrc = imageError ? "/images/placeholder.jpg" : (product.image || "/images/placeholder.jpg")
@@ -51,7 +59,7 @@ export function ProductCard({ product }: { product: Product }) {
 
       {/* Wishlist */}
       <button
-        onClick={() => toggle(product.id)}
+        onClick={handleWishlistToggle}
         className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-card/80 backdrop-blur-sm transition-colors hover:bg-card"
         aria-label={t("products.wishlist")}
       >

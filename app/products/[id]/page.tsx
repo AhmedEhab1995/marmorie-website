@@ -22,7 +22,7 @@ export default function ProductDetailPage({
   const { id } = use(params)
   const { t, locale } = useI18n()
   const { addItem } = useCart()
-  const { toggle, isWishlisted } = useWishlist()
+  const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist() // ← Updated
   const [quantity, setQuantity] = useState(1)
   const [engraving, setEngraving] = useState("")
 
@@ -47,7 +47,7 @@ export default function ProductDetailPage({
     )
   }
 
-  const wishlisted = isWishlisted(product.id)
+  const wishlisted = isInWishlist(product.id) // ← Updated
   const displayPrice = product.isSale && product.salePrice ? product.salePrice : product.price
   const related = products
     .filter((p) => p.category === product.category && p.id !== product.id)
@@ -62,6 +62,15 @@ export default function ProductDetailPage({
         image: product.image,
         engraving: engraving || undefined,
       })
+    }
+  }
+
+  // ← Updated: Toggle wishlist
+  const handleWishlistToggle = async () => {
+    if (wishlisted) {
+      await removeFromWishlist(product.id)
+    } else {
+      await addToWishlist(product.id)
     }
   }
 
@@ -182,7 +191,7 @@ export default function ProductDetailPage({
                 variant="outline"
                 size="lg"
                 className={`border-border bg-transparent ${wishlisted ? "text-primary border-primary" : "text-foreground"}`}
-                onClick={() => toggle(product.id)}
+                onClick={handleWishlistToggle}
               >
                 <Heart className={`h-4 w-4 ${wishlisted ? "fill-primary" : ""}`} />
               </Button>

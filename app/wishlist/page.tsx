@@ -1,20 +1,48 @@
 "use client"
 
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { ProductCard } from "@/components/product-card"
 import { useI18n } from "@/lib/i18n"
+import { useAuth } from "@/lib/auth-context"
 import { useWishlist } from "@/lib/wishlist"
 import { products } from "@/lib/products"
 import { Button } from "@/components/ui/button"
-import { Heart, ArrowRight } from "lucide-react"
+import { Heart, ArrowRight, Loader2 } from "lucide-react"
 
 export default function WishlistPage() {
   const { t, locale } = useI18n()
-  const { items } = useWishlist()
+  const { user, loading: authLoading } = useAuth()
+  const { items, loading: wishlistLoading } = useWishlist()
+  const router = useRouter()
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login?redirect=/wishlist")
+    }
+  }, [user, authLoading, router])
 
   const wishlistedProducts = products.filter((p) => items.includes(p.id))
+
+  if (authLoading || wishlistLoading) {
+    return (
+      <div className="min-h-screen">
+        <Navbar />
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+        <Footer />
+      </div>
+    )
+  }
+
+  if (!user) {
+    return null // Will redirect to login
+  }
 
   return (
     <div className="min-h-screen">

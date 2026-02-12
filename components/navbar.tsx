@@ -27,7 +27,7 @@ export function Navbar() {
   const { t, locale, setLocale } = useI18n()
   const { user, profile, signOut } = useAuth()
   const { itemCount } = useCart()
-  const { count: wishlistCount } = useWishlist()
+  const { items } = useWishlist()
   const [open, setOpen] = useState(false)
 
   const navLinks = [
@@ -184,9 +184,9 @@ export function Navbar() {
               className="relative text-muted-foreground hover:text-foreground"
             >
               <Heart className="h-4 w-4" />
-              {wishlistCount > 0 && (
+              {items.length > 0 && (
                 <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                  {wishlistCount}
+                  {items.length}
                 </span>
               )}
             </Button>
