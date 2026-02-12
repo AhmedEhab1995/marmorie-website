@@ -38,8 +38,6 @@ export const translations: Translations = {
   "cat.valentines": { en: "Valentine's Day", ar: "عيد الحب" },
   "cat.engraving": { en: "Engraving", ar: "نقش" },
   "cat.labDiamonds": { en: "Lab-grown Diamonds", ar: "ألماس مُصنّع" },
-  "cat.marmorieBox": { en: "Marmorie's Box", ar: "علبة مارموري" },
-  "cat.bridal": { en: "Bridal Collection", ar: "مجموعة العرائس" },
   "cat.gifts": { en: "Gifts", ar: "هدايا" },
   "cat.sale": { en: "Sale", ar: "تخفيضات" },
 
@@ -194,6 +192,36 @@ export const translations: Translations = {
   "faq.care": { en: "Jewelry Care", ar: "العناية بالمجوهرات" },
   "faq.engravingTitle": { en: "Engraving", ar: "النقش" },
   "faq.sizing": { en: "Sizing Questions", ar: "أسئلة المقاسات" },
+
+  // Authentication
+  "auth.signIn": { en: "Sign In", ar: "تسجيل الدخول" },
+  "auth.signOut": { en: "Sign Out", ar: "تسجيل الخروج" },
+  "auth.signUp": { en: "Sign Up", ar: "إنشاء حساب" },
+  "auth.createAccount": { en: "Create Account", ar: "إنشاء حساب" },
+  "auth.welcomeBack": { en: "Welcome Back", ar: "مرحباً بعودتك" },
+  "auth.joinMarmorie": { en: "Join Marmorie and start your jewelry journey", ar: "انضمي إلى مارموري وابدئي رحلتك مع المجوهرات" },
+  "auth.signInToContinue": { en: "Sign in to continue shopping", ar: "سجلي الدخول لمتابعة التسوق" },
+  "auth.password": { en: "Password", ar: "كلمة المرور" },
+  "auth.confirmPassword": { en: "Confirm Password", ar: "تأكيد كلمة المرور" },
+  "auth.alreadyHaveAccount": { en: "Already have an account?", ar: "لديك حساب بالفعل؟" },
+  "auth.dontHaveAccount": { en: "Don't have an account?", ar: "ليس لديك حساب؟" },
+  "auth.fillAllFields": { en: "Please fill in all fields", ar: "يرجى ملء جميع الحقول" },
+  "auth.passwordMismatch": { en: "Passwords do not match", ar: "كلمات المرور غير متطابقة" },
+  "auth.passwordTooShort": { en: "Password must be at least 6 characters", ar: "يجب أن تكون كلمة المرور 6 أحرف على الأقل" },
+  "auth.invalidCredentials": { en: "Invalid email or password", ar: "البريد الإلكتروني أو كلمة المرور غير صحيحة" },
+  "auth.creatingAccount": { en: "Creating account...", ar: "جاري إنشاء الحساب..." },
+  "auth.signingIn": { en: "Signing in...", ar: "جاري تسجيل الدخول..." },
+  "auth.pleaseSignIn": { en: "Please sign in to continue", ar: "يرجى تسجيل الدخول للمتابعة" },
+
+  // Orders
+  "orders.title": { en: "Order History", ar: "سجل الطلبات" },
+  "orders.order": { en: "order", ar: "طلب" },
+  "orders.orders": { en: "orders", ar: "طلبات" },
+  "orders.orderNumber": { en: "Order", ar: "طلب" },
+  "orders.noOrders": { en: "No orders yet", ar: "لا توجد طلبات بعد" },
+  "orders.noOrdersDesc": { en: "Start shopping and your orders will appear here", ar: "ابدئي التسوق وستظهر طلباتك هنا" },
+  "orders.startShopping": { en: "Start Shopping", ar: "ابدئي التسوق" },
+  "orders.shippingAddress": { en: "Shipping Address", ar: "عنوان الشحن" },
 }
 
 type I18nContextType = {

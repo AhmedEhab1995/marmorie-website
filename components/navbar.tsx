@@ -2,16 +2,30 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { Heart, ShoppingBag, Menu, Globe, User } from "lucide-react"
+import { Heart, ShoppingBag, Menu, Globe, User, LogOut, Package } from "lucide-react"
 import { useI18n } from "@/lib/i18n"
+import { useAuth } from "@/lib/auth-context"
 import { useCart } from "@/lib/cart"
 import { useWishlist } from "@/lib/wishlist"
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { MarmorieLogo } from "@/components/marmorie-logo"
 
 export function Navbar() {
   const { t, locale, setLocale } = useI18n()
+  const { user, profile, signOut } = useAuth()
   const { itemCount } = useCart()
   const { count: wishlistCount } = useWishlist()
   const [open, setOpen] = useState(false)
@@ -63,6 +77,15 @@ export function Navbar() {
                 >
                   {t("footer.faq")}
                 </Link>
+                {user && (
+                  <Link
+                    href="/orders"
+                    onClick={() => setOpen(false)}
+                    className="text-base font-medium text-foreground transition-colors hover:text-primary"
+                  >
+                    {t("orders.title")}
+                  </Link>
+                )}
               </div>
             </SheetContent>
           </Sheet>
@@ -100,16 +123,59 @@ export function Navbar() {
               {locale === "en" ? "Switch to Arabic" : "Switch to English"}
             </span>
           </Button>
-          <Link href="/profile">
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={t("profile.title")}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <User className="h-4 w-4" />
-            </Button>
-          </Link>
+
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t("profile.title")}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <User className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <div className="px-2 py-1.5">
+                  <p className="text-sm font-medium text-foreground">
+                    {profile?.first_name} {profile?.last_name}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{profile?.email}</p>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/profile" className="cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    {t("profile.title")}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/orders" className="cursor-pointer">
+                    <Package className="mr-2 h-4 w-4" />
+                    {t("orders.title")}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={signOut} className="cursor-pointer text-destructive">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  {t("auth.signOut")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link href="/login">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={t("auth.signIn")}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <User className="h-4 w-4" />
+              </Button>
+            </Link>
+          )}
+
           <Link href="/wishlist">
             <Button
               variant="ghost"
