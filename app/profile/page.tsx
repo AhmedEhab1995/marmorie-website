@@ -4,14 +4,17 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
+import { DeliveryNotice } from "@/components/delivery-notice"
 import { useI18n } from "@/lib/i18n"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { PhoneInput } from "@/components/phone-input"
 import { Separator } from "@/components/ui/separator"
-import { Info, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { createClient } from "@/lib/supabase-client"
+import { validateEgyptianPhone } from "@/lib/phone-validation"
 
 export default function ProfilePage() {
   const { t, locale } = useI18n()
@@ -19,7 +22,6 @@ export default function ProfilePage() {
   const router = useRouter()
   const [saved, setSaved] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [addresses, setAddresses] = useState<any[]>([])
 
   const [form, setForm] = useState({
     firstName: "",
@@ -28,7 +30,7 @@ export default function ProfilePage() {
     phone: "",
     address: "",
     city: "",
-    country: "",
+    country: "Egypt",
     postalCode: "",
   })
 
@@ -49,7 +51,7 @@ export default function ProfilePage() {
         phone: profile.phone || "",
         address: "",
         city: "",
-        country: "",
+        country: "Egypt",
         postalCode: "",
       })
       loadAddress()
@@ -86,6 +88,15 @@ export default function ProfilePage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) return
+
+    // Validate phone if provided
+    if (form.phone) {
+      const phoneValidation = validateEgyptianPhone(form.phone)
+      if (!phoneValidation.isValid) {
+        alert(locale === "ar" ? "رقم الهاتف غير صحيح" : "Invalid phone number")
+        return
+      }
+    }
 
     setLoading(true)
     const supabase = createClient()
@@ -140,7 +151,7 @@ export default function ProfilePage() {
       setTimeout(() => setSaved(false), 3000)
     } catch (error) {
       console.error("Error saving profile:", error)
-      alert("Failed to save profile. Please try again.")
+      alert(locale === "ar" ? "فشل الحفظ. حاول مرة أخرى." : "Failed to save. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -173,14 +184,9 @@ export default function ProfilePage() {
           </p>
         </div>
 
-        {/* Info notice */}
-        <div className="mt-8 flex items-start gap-3 rounded-sm border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/20 p-4">
-          <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-400" />
-          <p className="text-xs text-blue-900 dark:text-blue-100 leading-relaxed">
-            {locale === "ar"
-              ? "معلوماتك محفوظة بشكل آمن ويمكنك تحديثها في أي وقت."
-              : "Your information is securely saved and you can update it anytime."}
-          </p>
+        {/* Delivery notice */}
+        <div className="mt-8">
+          <DeliveryNotice />
         </div>
 
         <form onSubmit={handleSave} className="mt-10 space-y-10">
@@ -226,16 +232,11 @@ export default function ProfilePage() {
                   {locale === "ar" ? "لا يمكن تغيير البريد الإلكتروني" : "Email cannot be changed"}
                 </p>
               </div>
-              <div>
-                <Label className="text-sm text-foreground">{t("contact.phone")}</Label>
-                <Input
-                  className="mt-1.5 border-border bg-background"
-                  type="tel"
-                  value={form.phone}
-                  onChange={(e) => update("phone", e.target.value)}
-                  placeholder="+20 100 123 4567"
-                />
-              </div>
+              <PhoneInput
+                value={form.phone}
+                onChange={(phone) => update("phone", phone)}
+                label={t("contact.phone")}
+              />
             </div>
           </section>
 
@@ -255,7 +256,7 @@ export default function ProfilePage() {
                   className="mt-1.5 border-border bg-background"
                   value={form.address}
                   onChange={(e) => update("address", e.target.value)}
-                  placeholder={locale === "ar" ? "123 شارع النيل" : "123 Main Street"}
+                  placeholder={locale === "ar" ? "123 شارع النيل، المعادي" : "123 Nile Street, Maadi"}
                 />
               </div>
               <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
@@ -280,10 +281,9 @@ export default function ProfilePage() {
                 <div>
                   <Label className="text-sm text-foreground">{t("checkout.country")}</Label>
                   <Input
-                    className="mt-1.5 border-border bg-background"
-                    value={form.country}
-                    onChange={(e) => update("country", e.target.value)}
-                    placeholder={locale === "ar" ? "مصر" : "Egypt"}
+                    className="mt-1.5 border-border bg-muted"
+                    value="Egypt"
+                    disabled
                   />
                 </div>
               </div>

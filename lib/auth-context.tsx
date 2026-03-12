@@ -17,7 +17,7 @@ type AuthContextType = {
   user: User | null
   profile: UserProfile | null
   loading: boolean
-  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: Error | null }>
+  signUp: (email: string, password: string, firstName: string, lastName: string, phone?: string) => Promise<{ error: Error | null }>
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
   signOut: () => Promise<void>
   updateProfile: (data: Partial<UserProfile>) => Promise<{ error: Error | null }>
@@ -33,7 +33,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = createClient()
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       if (session?.user) {
@@ -43,7 +42,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     })
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -79,11 +77,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
+  // FIX 1: Accept phone and save it to users table on signup
+  const signUp = async (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    phone?: string
+  ) => {
     try {
-      console.log("Starting signup process...")
-      
-      // Step 1: Sign up with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -91,82 +93,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           data: {
             first_name: firstName,
             last_name: lastName,
-          }
-        }
+          },
+        },
       })
 
-      if (authError) {
-        console.error("Auth signup error:", authError)
-        throw authError
+      if (authError) throw authError
+      if (!authData.user) throw new Error("No user returned from signup")
+
+      // Build profile payload — include phone if provided
+      const profilePayload: {
+        id: string
+        email: string
+        first_name: string
+        last_name: string
+        phone?: string
+      } = {
+        id: authData.user.id,
+        email,
+        first_name: firstName,
+        last_name: lastName,
       }
+      if (phone) profilePayload.phone = phone
 
-      if (!authData.user) {
-        throw new Error("No user returned from signup")
-      }
-
-      console.log("User created in auth:", authData.user.id)
-
-      // Step 2: Create profile in users table
-      // We'll use upsert to handle any race conditions
       const { error: profileError } = await supabase
         .from("users")
-        .upsert({
-          id: authData.user.id,
-          email: email,
-          first_name: firstName,
-          last_name: lastName,
-        }, {
-          onConflict: 'id'
-        })
+        .upsert(profilePayload, { onConflict: "id" })
 
       if (profileError) {
-        console.error("Profile creation error:", profileError)
-        
-        // Don't throw error - profile might be created by database trigger
-        // or we can retry later
-        console.log("Will retry profile creation...")
-        
-        // Try once more after a delay
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        
-        const { error: retryError } = await supabase
-          .from("users")
-          .upsert({
-            id: authData.user.id,
-            email: email,
-            first_name: firstName,
-            last_name: lastName,
-          }, {
-            onConflict: 'id'
-          })
-        
-        if (retryError) {
-          console.error("Retry failed:", retryError)
-          // Still don't throw - user is created, profile can be added later
-        }
+        // Retry once after brief delay (handles trigger race conditions)
+        await new Promise((resolve) => setTimeout(resolve, 2000))
+        await supabase.from("users").upsert(profilePayload, { onConflict: "id" })
       }
 
-      console.log("Signup completed successfully")
-      
-      // Fetch the profile
-      await fetchProfile(authData.user.id)
-
+      // If email confirmation is enabled, there's no session yet — skip profile fetch
+      // Supabase returns an empty session when confirmation is required
+      if (authData.session) {
+        await fetchProfile(authData.user.id)
+      }
       return { error: null }
     } catch (error) {
-      console.error("Signup error:", error)
-      return { 
-        error: error as Error 
-      }
+      return { error: error as Error }
     }
   }
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
       return { error: null }
     } catch (error) {
@@ -192,9 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error
 
-      // Update local state
       setProfile((prev) => (prev ? { ...prev, ...data } : null))
-
       return { error: null }
     } catch (error) {
       return { error: error as Error }
@@ -203,15 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{
-        user,
-        profile,
-        loading,
-        signUp,
-        signIn,
-        signOut,
-        updateProfile,
-      }}
+      value={{ user, profile, loading, signUp, signIn, signOut, updateProfile }}
     >
       {children}
     </AuthContext.Provider>

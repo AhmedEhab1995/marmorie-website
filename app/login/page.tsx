@@ -13,7 +13,7 @@ import { useI18n } from "@/lib/i18n"
 import { Loader2 } from "lucide-react"
 
 export default function LoginPage() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const { signIn } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -71,7 +71,15 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <Label className="text-sm text-foreground">{t("auth.password")}</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-sm text-foreground">{t("auth.password")}</Label>
+              <Link 
+                href="/forgot-password" 
+                className="text-xs text-primary hover:underline"
+              >
+                {locale === "ar" ? "نسيت كلمة المرور؟" : "Forgot password?"}
+              </Link>
+            </div>
             <Input
               type="password"
               className="mt-1.5 border-border bg-background"

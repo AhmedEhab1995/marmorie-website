@@ -3,12 +3,13 @@
 import { use, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowLeft, Heart, Minus, Plus, ShoppingBag } from "lucide-react"
+import { ArrowLeft, Heart, Minus, Plus, ShoppingBag, ChevronLeft, ChevronRight } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { ProductCard } from "@/components/product-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { ShareButton } from "@/components/share-button"
 import { useI18n } from "@/lib/i18n"
 import { useCart } from "@/lib/cart"
 import { useWishlist } from "@/lib/wishlist"
@@ -22,9 +23,10 @@ export default function ProductDetailPage({
   const { id } = use(params)
   const { t, locale } = useI18n()
   const { addItem } = useCart()
-  const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist() // ← Updated
+  const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist()
   const [quantity, setQuantity] = useState(1)
   const [engraving, setEngraving] = useState("")
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0)
 
   const product = getProductById(id)
 
@@ -47,7 +49,16 @@ export default function ProductDetailPage({
     )
   }
 
-  const wishlisted = isInWishlist(product.id) // ← Updated
+  // Combine images and videos into a unified media array
+  // Each item: { type: "image" | "video", src: string }
+  const mediaItems: { type: "image" | "video"; src: string }[] = [
+    ...product.images.map((src) => ({ type: "image" as const, src })),
+    ...(product.videos ?? []).map((src) => ({ type: "video" as const, src })),
+  ]
+
+  const activeMedia = mediaItems[activeMediaIndex] ?? { type: "image", src: product.image }
+
+  const wishlisted = isInWishlist(product.id)
   const displayPrice = product.isSale && product.salePrice ? product.salePrice : product.price
   const related = products
     .filter((p) => p.category === product.category && p.id !== product.id)
@@ -65,7 +76,6 @@ export default function ProductDetailPage({
     }
   }
 
-  // ← Updated: Toggle wishlist
   const handleWishlistToggle = async () => {
     if (wishlisted) {
       await removeFromWishlist(product.id)
@@ -73,6 +83,11 @@ export default function ProductDetailPage({
       await addToWishlist(product.id)
     }
   }
+
+  const goPrev = () =>
+    setActiveMediaIndex((i) => (i - 1 + mediaItems.length) % mediaItems.length)
+  const goNext = () =>
+    setActiveMediaIndex((i) => (i + 1) % mediaItems.length)
 
   return (
     <div className="min-h-screen">
@@ -90,22 +105,100 @@ export default function ProductDetailPage({
         <div className="mt-6 flex flex-col gap-12 lg:flex-row lg:gap-20">
           {/* Gallery */}
           <div className="flex-1">
+            {/* Main media viewer */}
             <div className="relative aspect-[3/4] overflow-hidden rounded-sm bg-secondary">
-              <Image
-                src={product.image || "/placeholder.svg"}
-                alt={product.name[locale]}
-                fill
-                className="object-cover"
-                priority
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                loading="eager"
-              />
+              {activeMedia.type === "video" ? (
+                <video
+                  key={activeMedia.src}
+                  src={activeMedia.src}
+                  className="h-full w-full object-cover"
+                  controls
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                />
+              ) : (
+                <Image
+                  src={activeMedia.src || "/placeholder.svg"}
+                  alt={product.name[locale]}
+                  fill
+                  className="object-cover transition-opacity duration-300"
+                  priority={activeMediaIndex === 0}
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  loading={activeMediaIndex === 0 ? "eager" : "lazy"}
+                />
+              )}
+
               {product.isNew && (
                 <span className="absolute top-4 left-4 bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-primary-foreground">
                   {locale === "ar" ? "جديد" : "New"}
                 </span>
               )}
+
+              {/* Prev / Next arrows — only shown when there's more than one media item */}
+              {mediaItems.length > 1 && (
+                <>
+                  <button
+                    onClick={goPrev}
+                    aria-label="Previous"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-card/80 backdrop-blur-sm text-foreground shadow transition hover:bg-card"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={goNext}
+                    aria-label="Next"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-card/80 backdrop-blur-sm text-foreground shadow transition hover:bg-card"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </>
+              )}
             </div>
+
+            {/* Thumbnail strip */}
+            {mediaItems.length > 1 && (
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                {mediaItems.map((media, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveMediaIndex(idx)}
+                    className={`relative flex-shrink-0 h-20 w-16 overflow-hidden rounded-sm border-2 transition-all ${
+                      idx === activeMediaIndex
+                        ? "border-primary opacity-100"
+                        : "border-transparent opacity-60 hover:opacity-100"
+                    }`}
+                    aria-label={`View media ${idx + 1}`}
+                  >
+                    {media.type === "video" ? (
+                      <div className="flex h-full w-full items-center justify-center bg-secondary">
+                        {/* Video thumbnail placeholder with play icon */}
+                        <video
+                          src={media.src}
+                          className="h-full w-full object-cover"
+                          muted
+                          preload="metadata"
+                        />
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/80">
+                            <span className="ml-0.5 border-y-4 border-y-transparent border-l-[8px] border-l-white" />
+                          </span>
+                        </span>
+                      </div>
+                    ) : (
+                      <Image
+                        src={media.src || "/placeholder.svg"}
+                        alt={`${product.name[locale]} ${idx + 1}`}
+                        fill
+                        className="object-cover"
+                        sizes="64px"
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product info */}
@@ -131,6 +224,18 @@ export default function ProductDetailPage({
             <p className="mt-6 text-sm text-muted-foreground leading-relaxed">
               {product.description[locale]}
             </p>
+
+            {/* Material */}
+            {product.material && (
+              <div className="mt-6 flex items-center gap-3 rounded-sm border border-border bg-secondary/40 px-4 py-3">
+                <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                  {locale === "ar" ? "الخامة" : "Material"}
+                </span>
+                <span className="text-sm font-medium text-foreground">
+                  {product.material[locale]}
+                </span>
+              </div>
+            )}
 
             {/* Engraving */}
             {product.allowEngraving && (
@@ -195,6 +300,10 @@ export default function ProductDetailPage({
               >
                 <Heart className={`h-4 w-4 ${wishlisted ? "fill-primary" : ""}`} />
               </Button>
+                <ShareButton
+    productName={product.name[locale]}
+    productDescription={product.description[locale]}
+  />
             </div>
 
             {/* Buy now */}
@@ -242,6 +351,10 @@ export default function ProductDetailPage({
             <ShoppingBag className="mr-2 h-4 w-4" />
             {t("products.addToCart")}
           </Button>
+            <ShareButton
+    productName={product.name[locale]}
+    productDescription={product.description[locale]}
+  />
         </div>
       </div>
 

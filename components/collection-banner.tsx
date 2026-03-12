@@ -16,7 +16,7 @@ export function CollectionBanner() {
     <section className="relative overflow-hidden bg-foreground">
       <div className="absolute inset-0">
         <Image
-          src="/images/collection.jpg"
+          src="/images/collection2.jpg"
           alt="Marmorie collection"
           fill
           className="object-cover opacity-40"
@@ -24,7 +24,7 @@ export function CollectionBanner() {
           loading="eager"
         />
       </div>
-      <div
+      {/* <div
         ref={content.ref}
         className={`relative mx-auto flex max-w-7xl flex-col items-center justify-center px-4 py-24 text-center lg:py-32 transition-all duration-1000 ${
           content.isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
@@ -48,7 +48,7 @@ export function CollectionBanner() {
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </Link>
-      </div>
+      </div> */}
     </section>
   )
 }

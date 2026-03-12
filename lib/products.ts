@@ -6,6 +6,11 @@ export type Product = {
   category: string
   image: string
   images: string[]
+  videos?: string[]           // ← NEW: optional video URLs (mp4, webm, etc.)
+  material: {
+    en: string                // e.g. "18K Gold"
+    ar: string                // e.g. "ذهب عيار 18"
+  }
   isNew?: boolean
   isSale?: boolean
   salePrice?: number
@@ -23,8 +28,13 @@ export const products: Product[] = [
     },
     price: 1250,
     category: "necklaces",
-    image: "/images/product-1.jpg",
-    images: ["/images/product-1.jpg"],
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/product-1.jpg",
+    images: ["/images/product-1.jpg", "/images/product-2.jpg"],
+    videos: ["/videos/product-1-vid.mp4"],
     isNew: true,
     allowEngraving: true,
   },
@@ -37,10 +47,13 @@ export const products: Product[] = [
     },
     price: 1450,
     category: "necklaces",
-    image: "/images/product-6.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/product-6.jpg",
     images: ["/images/product-6.jpg"],
     isSale: true,
-    salePrice: 1160,
   },
   {
     id: "7",
@@ -51,7 +64,11 @@ export const products: Product[] = [
     },
     price: 780,
     category: "necklaces",
-    image: "/images/product-1.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/product-1.jpg",
     images: ["/images/product-1.jpg"],
     allowEngraving: true,
   },
@@ -64,7 +81,11 @@ export const products: Product[] = [
     },
     price: 980,
     category: "necklaces",
-    image: "/images/product-6.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/product-6.jpg",
     images: ["/images/product-6.jpg"],
     isNew: true,
   },
@@ -77,7 +98,11 @@ export const products: Product[] = [
     },
     price: 1100,
     category: "necklaces",
-    image: "/images/product-1.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/product-1.jpg",
     images: ["/images/product-1.jpg"],
     allowEngraving: true,
   },
@@ -92,7 +117,11 @@ export const products: Product[] = [
     },
     price: 890,
     category: "rings",
-    image: "/images/product-2.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/product-2.jpg",
     images: ["/images/product-2.jpg"],
     allowEngraving: true,
   },
@@ -105,7 +134,11 @@ export const products: Product[] = [
     },
     price: 2100,
     category: "rings",
-    image: "/images/product-5.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/product-5.jpg",
     images: ["/images/product-5.jpg"],
     isNew: true,
     allowEngraving: true,
@@ -119,7 +152,11 @@ export const products: Product[] = [
     },
     price: 1340,
     category: "rings",
-    image: "/images/product-5.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/product-5.jpg",
     images: ["/images/product-5.jpg"],
   },
   {
@@ -131,7 +168,11 @@ export const products: Product[] = [
     },
     price: 620,
     category: "rings",
-    image: "/images/product-2.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/product-2.jpg",
     images: ["/images/product-2.jpg"],
     allowEngraving: true,
   },
@@ -144,7 +185,11 @@ export const products: Product[] = [
     },
     price: 750,
     category: "rings",
-    image: "/images/product-5.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/product-5.jpg",
     images: ["/images/product-5.jpg"],
     isNew: true,
   },
@@ -159,7 +204,11 @@ export const products: Product[] = [
     },
     price: 680,
     category: "bracelets",
-    image: "/images/product-3.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/product-3.jpg",
     images: ["/images/product-3.jpg"],
     isNew: true,
     allowEngraving: true,
@@ -173,7 +222,11 @@ export const products: Product[] = [
     },
     price: 2450,
     category: "bracelets",
-    image: "/images/product-3.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/product-3.jpg",
     images: ["/images/product-3.jpg"],
   },
   {
@@ -185,7 +238,11 @@ export const products: Product[] = [
     },
     price: 920,
     category: "bracelets",
-    image: "/images/product-3.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/product-3.jpg",
     images: ["/images/product-3.jpg"],
     isSale: true,
     salePrice: 690,
@@ -199,7 +256,11 @@ export const products: Product[] = [
     },
     price: 380,
     category: "bracelets",
-    image: "/images/product-3.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/product-3.jpg",
     images: ["/images/product-3.jpg"],
     allowEngraving: true,
     isNew: true,
@@ -213,7 +274,11 @@ export const products: Product[] = [
     },
     price: 850,
     category: "bracelets",
-    image: "/images/product-3.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/product-3.jpg",
     images: ["/images/product-3.jpg"],
   },
 
@@ -227,7 +292,11 @@ export const products: Product[] = [
     },
     price: 520,
     category: "earrings",
-    image: "/images/product-4.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/product-4.jpg",
     images: ["/images/product-4.jpg"],
   },
   {
@@ -239,7 +308,11 @@ export const products: Product[] = [
     },
     price: 340,
     category: "earrings",
-    image: "/images/product-4.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/product-4.jpg",
     images: ["/images/product-4.jpg"],
     isNew: true,
   },
@@ -252,7 +325,11 @@ export const products: Product[] = [
     },
     price: 460,
     category: "earrings",
-    image: "/images/product-4.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/product-4.jpg",
     images: ["/images/product-4.jpg"],
   },
   {
@@ -264,7 +341,11 @@ export const products: Product[] = [
     },
     price: 690,
     category: "earrings",
-    image: "/images/product-4.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/product-4.jpg",
     images: ["/images/product-4.jpg"],
     isSale: true,
     salePrice: 520,
@@ -278,7 +359,11 @@ export const products: Product[] = [
     },
     price: 290,
     category: "earrings",
-    image: "/images/product-4.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/product-4.jpg",
     images: ["/images/product-4.jpg"],
   },
 
@@ -292,7 +377,11 @@ export const products: Product[] = [
     },
     price: 280,
     category: "charms",
-    image: "/images/cat-charms.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/cat-charms.jpg",
     images: ["/images/cat-charms.jpg"],
     isNew: true,
   },
@@ -305,7 +394,11 @@ export const products: Product[] = [
     },
     price: 220,
     category: "charms",
-    image: "/images/cat-charms.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/cat-charms.jpg",
     images: ["/images/cat-charms.jpg"],
     allowEngraving: true,
   },
@@ -318,7 +411,11 @@ export const products: Product[] = [
     },
     price: 310,
     category: "charms",
-    image: "/images/cat-charms.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/cat-charms.jpg",
     images: ["/images/cat-charms.jpg"],
   },
   {
@@ -330,7 +427,11 @@ export const products: Product[] = [
     },
     price: 350,
     category: "charms",
-    image: "/images/cat-charms.jpg",
+        material: {
+    en: "18K Gold",
+    ar: "ذهب عيار 18"
+  },
+image: "/images/cat-charms.jpg",
     images: ["/images/cat-charms.jpg"],
     isNew: true,
   },

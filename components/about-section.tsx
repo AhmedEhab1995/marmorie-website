@@ -22,7 +22,7 @@ export function AboutSection() {
         >
           <div className="relative aspect-[4/5] overflow-hidden rounded-sm">
             <Image
-              src="/images/about.jpg"
+              src="/images/about2.jpg"
               alt="Marmorie artisan craftsmanship"
               fill
               className="object-cover"

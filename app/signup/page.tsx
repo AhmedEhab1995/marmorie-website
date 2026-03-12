@@ -5,23 +5,28 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
+import { DeliveryNotice } from "@/components/delivery-notice"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { PhoneInput } from "@/components/phone-input"
 import { useAuth } from "@/lib/auth-context"
 import { useI18n } from "@/lib/i18n"
-import { Loader2 } from "lucide-react"
+import { Loader2, MailOpen } from "lucide-react"
+import { validateEgyptianPhone } from "@/lib/phone-validation"
 
 export default function SignUpPage() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const { signUp } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [emailSent, setEmailSent] = useState(false)
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
   })
@@ -30,7 +35,6 @@ export default function SignUpPage() {
     e.preventDefault()
     setError("")
 
-    // Validation
     if (!form.firstName || !form.lastName || !form.email || !form.password) {
       setError(t("auth.fillAllFields"))
       return
@@ -46,13 +50,23 @@ export default function SignUpPage() {
       return
     }
 
+    if (form.phone) {
+      const phoneValidation = validateEgyptianPhone(form.phone)
+      if (!phoneValidation.isValid) {
+        setError(locale === "ar" ? "رقم الهاتف غير صحيح" : "Invalid phone number")
+        return
+      }
+    }
+
     setLoading(true)
 
+    // FIX 2: Pass phone as the 5th argument so it gets stored in the users table
     const { error: signUpError } = await signUp(
       form.email,
       form.password,
       form.firstName,
-      form.lastName
+      form.lastName,
+      form.phone || undefined
     )
 
     setLoading(false)
@@ -60,9 +74,56 @@ export default function SignUpPage() {
     if (signUpError) {
       setError(signUpError.message)
     } else {
-      // Successfully created account, redirect to home
-      router.push("/")
+      setEmailSent(true)
     }
+  }
+
+  if (emailSent) {
+    return (
+      <div className="min-h-screen">
+        <Navbar />
+        <main className="mx-auto max-w-md px-4 py-16 lg:px-8">
+          <div className="text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+              <MailOpen className="h-7 w-7 text-primary" />
+            </div>
+            <h1 className="mt-5 font-serif text-3xl text-foreground md:text-4xl">
+              {locale === "ar" ? "تحقق من بريدك الإلكتروني" : "Check your email"}
+            </h1>
+            <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+              {locale === "ar"
+                ? `أرسلنا رابط تأكيد إلى ${form.email}. انقر على الرابط لتفعيل حسابك.`
+                : `We sent a confirmation link to ${form.email}. Click it to activate your account.`}
+            </p>
+          </div>
+
+          <div className="mt-8 rounded-sm border border-border bg-card p-4">
+            <p className="text-xs text-muted-foreground">
+              <strong className="font-medium text-foreground">
+                {locale === "ar" ? "لم يصلك البريد؟" : "Didn't receive it?"}
+              </strong>{" "}
+              {locale === "ar"
+                ? "تحقق من مجلد البريد المزعج، أو "
+                : "Check your spam folder, or "}
+              <button
+                onClick={() => setEmailSent(false)}
+                className="font-medium text-primary hover:underline"
+              >
+                {locale === "ar" ? "حاول مرة أخرى" : "try again"}
+              </button>
+              .
+            </p>
+          </div>
+
+          <div className="mt-6 text-center">
+            <Link href="/login" className="text-sm font-medium text-primary hover:underline">
+              {locale === "ar" ? "العودة لتسجيل الدخول" : "Back to sign in"}
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
   }
 
   return (
@@ -76,6 +137,10 @@ export default function SignUpPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             {t("auth.joinMarmorie")}
           </p>
+        </div>
+
+        <div className="mt-6">
+          <DeliveryNotice />
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
@@ -119,6 +184,13 @@ export default function SignUpPage() {
               disabled={loading}
             />
           </div>
+
+          <PhoneInput
+            value={form.phone}
+            onChange={(phone) => setForm({ ...form, phone })}
+            label={t("contact.phone")}
+            disabled={loading}
+          />
 
           <div>
             <Label className="text-sm text-foreground">{t("auth.password")}</Label>

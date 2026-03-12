@@ -63,7 +63,7 @@ export function Hero() {
         >
           <div className="relative aspect-[4/5] lg:aspect-auto lg:h-[600px]">
             <Image
-              src="/images/collection.jpg"
+              src="/images/collection2.jpg"
               alt="Marmorie luxury jewelry collection"
               fill
               className="object-cover"

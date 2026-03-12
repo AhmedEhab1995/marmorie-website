@@ -12,14 +12,16 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { PromoCodeInput } from "@/components/promo-code-input"
+import { PhoneInput } from "@/components/phone-input"
 import { useI18n } from "@/lib/i18n"
 import { useAuth } from "@/lib/auth-context"
 import { useCart } from "@/lib/cart"
 import { createClient } from "@/lib/supabase-client"
+import { validateEgyptianPhone } from "@/lib/phone-validation"
 
 export default function CheckoutPage() {
   const { t, locale } = useI18n()
-  const { user, profile, loading: authLoading } = useAuth()
+  const { user, profile, updateProfile, loading: authLoading } = useAuth()
   const router = useRouter()
   const {
     items,
@@ -45,22 +47,20 @@ export default function CheckoutPage() {
     postalCode: "",
   })
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !user && items.length > 0) {
-      // Store the current path to redirect back after login
       router.push("/login?redirect=/checkout")
     }
   }, [user, authLoading, items.length, router])
 
-  // Load user data when available
   useEffect(() => {
     if (profile) {
       setForm((prev) => ({
         ...prev,
         name: `${profile.first_name || ""} ${profile.last_name || ""}`.trim(),
         email: profile.email || "",
-        phone: profile.phone || "",
+        // FIX 3a: Pre-fill phone from profile so it's never blank
+        phone: profile.phone || prev.phone,
       }))
       loadAddress()
     }
@@ -98,25 +98,69 @@ export default function CheckoutPage() {
 
     if (items.length === 0) return
 
+    // Validate Egyptian phone number
+    if (form.phone) {
+      const phoneValidation = validateEgyptianPhone(form.phone)
+      if (!phoneValidation.isValid) {
+        alert(locale === "ar" ? "رقم الهاتف غير صحيح" : "Invalid phone number")
+        return
+      }
+    }
+
     setLoading(true)
 
     try {
       const supabase = createClient()
 
-      // Generate order number
+      // FIX 3b: Sync phone back to profile if it changed or was missing
+      if (form.phone && form.phone !== profile?.phone) {
+        await updateProfile({ phone: form.phone })
+      }
+
+      // FIX 3c: Upsert the shipping address back to the addresses table
+      if (form.address && form.city && form.country) {
+        const { data: existingAddress } = await supabase
+          .from("addresses")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("is_default", true)
+          .single()
+
+        if (existingAddress) {
+          await supabase
+            .from("addresses")
+            .update({
+              address_line: form.address,
+              city: form.city,
+              country: form.country,
+              postal_code: form.postalCode || null,
+            })
+            .eq("id", existingAddress.id)
+        } else {
+          await supabase.from("addresses").insert({
+            user_id: user.id,
+            address_line: form.address,
+            city: form.city,
+            country: form.country,
+            postal_code: form.postalCode || null,
+            is_default: true,
+          })
+        }
+      }
+
+      // Place the order
       const orderNumber = `MRM-${Date.now()}-${Math.floor(Math.random() * 1000)}`
 
-      // Create order
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
           user_id: user.id,
           order_number: orderNumber,
           status: "pending",
-          subtotal: subtotal,
-          discount: discount,
+          subtotal,
+          discount,
           shipping_cost: 0,
-          total: total,
+          total,
           promo_code: promoCode?.code || null,
           promo_discount_percent: promoCode?.discount || null,
           shipping_name: form.name,
@@ -132,7 +176,6 @@ export default function CheckoutPage() {
 
       if (orderError) throw orderError
 
-      // Create order items
       const orderItems = items.map((item) => ({
         order_id: order.id,
         product_id: item.id,
@@ -144,20 +187,14 @@ export default function CheckoutPage() {
         engraving: item.engraving || null,
       }))
 
-      const { error: itemsError } = await supabase
-        .from("order_items")
-        .insert(orderItems)
-
+      const { error: itemsError } = await supabase.from("order_items").insert(orderItems)
       if (itemsError) throw itemsError
 
-      // Clear cart
       clearCart()
-
-      // Redirect to orders page
       router.push("/orders")
     } catch (error) {
       console.error("Error placing order:", error)
-      alert("Failed to place order. Please try again.")
+      alert(locale === "ar" ? "فشل تقديم الطلب. حاول مرة أخرى." : "Failed to place order. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -215,9 +252,7 @@ export default function CheckoutPage() {
                 </Button>
               </Link>
               <Link href="/signup">
-                <Button variant="outline">
-                  {t("auth.createAccount")}
-                </Button>
+                <Button variant="outline">{t("auth.createAccount")}</Button>
               </Link>
             </div>
           </div>
@@ -225,7 +260,6 @@ export default function CheckoutPage() {
           <div className="mt-10 flex flex-col gap-12 lg:flex-row lg:gap-20">
             {/* Cart items + Form */}
             <div className="flex-1">
-              {/* Items */}
               <div className="space-y-6">
                 {items.map((item) => (
                   <div key={`${item.id}-${item.engraving || ""}`} className="flex gap-4">
@@ -288,7 +322,6 @@ export default function CheckoutPage() {
 
               <Separator className="my-10" />
 
-              {/* Delivery form */}
               <h2 className="font-serif text-xl text-foreground">{t("checkout.address")}</h2>
               <form onSubmit={handlePlaceOrder} className="mt-6 space-y-5" id="checkout-form">
                 <div>
@@ -312,13 +345,10 @@ export default function CheckoutPage() {
                     />
                   </div>
                   <div>
-                    <Label className="text-sm text-foreground">{t("contact.phone")}</Label>
-                    <Input
-                      className="mt-1.5 border-border bg-background"
-                      type="tel"
+                    <PhoneInput
                       value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      required
+                      onChange={(phone) => setForm({ ...form, phone })}
+                      label={t("contact.phone")}
                     />
                   </div>
                 </div>
@@ -383,8 +413,7 @@ export default function CheckoutPage() {
                   ))}
                 </div>
                 <Separator className="my-4" />
-                
-                {/* Promo Code Input */}
+
                 <div className="mb-4">
                   <Label className="mb-2 block text-sm text-foreground">{t("promo.title")}</Label>
                   <PromoCodeInput
@@ -400,7 +429,7 @@ export default function CheckoutPage() {
                   <span className="text-muted-foreground">{t("checkout.subtotal")}</span>
                   <span className="text-foreground">${subtotal.toLocaleString()}</span>
                 </div>
-                
+
                 {discount > 0 && (
                   <div className="mt-2 flex items-center justify-between text-sm">
                     <span className="text-green-600 dark:text-green-400">
@@ -411,7 +440,7 @@ export default function CheckoutPage() {
                     </span>
                   </div>
                 )}
-                
+
                 <div className="mt-2 flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">{t("checkout.shipping")}</span>
                   <span className="text-foreground">{t("checkout.free")}</span>
